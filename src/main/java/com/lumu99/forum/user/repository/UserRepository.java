@@ -81,6 +81,14 @@ public class UserRepository {
         );
     }
 
+    public int updateMuteStatus(String userUuid, String muteStatus) {
+        return jdbcTemplate.update(
+                "UPDATE users SET mute_status = ? WHERE user_uuid = ?",
+                muteStatus,
+                userUuid
+        );
+    }
+
     public boolean existsByWeiboName(String weiboName) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE weibo_name = ?",

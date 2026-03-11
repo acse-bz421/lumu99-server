@@ -1,73 +1,97 @@
 # lumu99-server
 
-最小可运行的 Java Spring Boot 后端服务（Java 17 + Spring Boot 3）。
+Backend service for the Lumu99 forum/community platform.
 
-## 功能
-
-- 提供 `GET /hello`
-- 返回纯文本：`Hello from Spring Boot`
-- 服务端口：`8080`
-
-## 本地运行
-
-### 环境要求
-
+Tech stack:
 - Java 17
+- Spring Boot 3
+- MySQL 8
+- Flyway
+- Spring Security + JWT
+- springdoc-openapi
+
+## Local Requirements
+
+- JDK 17
 - Maven 3.9+
+- MySQL 8 (local)
 
-### 方式一：直接运行
+## Database Setup
+
+Use local MySQL (example: `root / 123456`).
+
+Create databases:
+
+```sql
+CREATE DATABASE IF NOT EXISTS lumu99_forum
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_unicode_ci;
+
+CREATE DATABASE IF NOT EXISTS lumu99_forum_test
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_unicode_ci;
+```
+
+Optional environment variables:
 
 ```bash
-mvn spring-boot:run
+DB_USERNAME=root
+DB_PASSWORD=123456
+DB_URL=jdbc:mysql://localhost:3306/lumu99_forum?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+
+TEST_DB_USERNAME=root
+TEST_DB_PASSWORD=123456
+TEST_DB_URL=jdbc:mysql://localhost:3306/lumu99_forum_test?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
 ```
 
-### 方式二：打包后运行
+## Run Application
 
 ```bash
-mvn clean package
-java -jar target/lumu99-server-0.0.1-SNAPSHOT.jar
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-### 接口验证
+Server default URL:
+- `http://localhost:8080`
+
+Note:
+- API prefix does not include `/api`.
+
+## Flyway Migration
+
+Flyway is enabled in `dev` profile and runs automatically at startup.
+
+Migration scripts:
+- `src/main/resources/db/migration`
+
+Current baseline migration:
+- `V1__init_forum_schema.sql`
+
+## Test and Verification
+
+Run full tests:
 
 ```bash
-curl http://localhost:8080/hello
+mvn clean test
 ```
 
-预期输出：
-
-```text
-Hello from Spring Boot
-```
-
-## 使用 Docker 运行
-
-### 构建镜像
+Run full verification (includes tests and packaging):
 
 ```bash
-docker build -t lumu99-server:latest .
+mvn verify
 ```
 
-### 本地测试启动容器
+## API Docs
 
-```bash
-docker run --rm -p 8080:8080 lumu99-server:latest
-```
+OpenAPI JSON:
+- `http://localhost:8080/v3/api-docs`
 
-### VPS 推荐启动命令（仅绑定本机回环，供 Nginx 反向代理）
+Swagger UI:
+- `http://localhost:8080/swagger-ui/index.html`
 
-```bash
-docker run -d \
-  --name lumu99-server \
-  --restart unless-stopped \
-  -p 127.0.0.1:8080:8080 \
-  lumu99-server:latest
-```
-
-## 部署目录
-
-本仓库可部署到：
-
-`/root/apps/lumu99/lumu99-server`
-
-后端不直接暴露到公网，仅通过 Nginx 反向代理访问。
+Grouped OpenAPI examples:
+- `http://localhost:8080/v3/api-docs/auth`
+- `http://localhost:8080/v3/api-docs/admin`
+- `http://localhost:8080/v3/api-docs/forum`
+- `http://localhost:8080/v3/api-docs/review`
+- `http://localhost:8080/v3/api-docs/content`
+- `http://localhost:8080/v3/api-docs/message`

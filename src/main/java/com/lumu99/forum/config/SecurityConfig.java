@@ -2,6 +2,7 @@ package com.lumu99.forum.config;
 
 import com.lumu99.forum.auth.security.JwtAuthFilter;
 import com.lumu99.forum.common.web.RequestIdFilter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -18,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectProvider<JwtAuthFilter> jwtAuthFilterProvider) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -46,8 +47,12 @@ public class SecurityConfig {
                             response.getWriter().write("{\"code\":\"ADMIN_403_ONLY_ADMIN\",\"message\":\"Only admin can access\",\"requestId\":\"" + requestId + "\"}");
                         })
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(Customizer.withDefaults());
+
+        JwtAuthFilter jwtAuthFilter = jwtAuthFilterProvider.getIfAvailable();
+        if (jwtAuthFilter != null) {
+            http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        }
         return http.build();
     }
 

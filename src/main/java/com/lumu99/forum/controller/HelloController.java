@@ -1,4 +1,4 @@
-package com.lumu99.demo.controller;
+package com.lumu99.forum.controller;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

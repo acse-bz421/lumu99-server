@@ -8,6 +8,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: lumu99_forum_test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,6 +34,18 @@ jobs:
 
       - name: Test
         run: mvn -B test
+        env:
+          TEST_DB_URL: jdbc:mysql://127.0.0.1:${{ job.services.mysql.ports[3306] }}/lumu99_forum_test?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+          TEST_DB_USERNAME: root
+          TEST_DB_PASSWORD: root
+          SPRING_FLYWAY_ENABLED: "true"
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
 
       - name: Package
         run: mvn -B -DskipTests package

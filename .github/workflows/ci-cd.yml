@@ -105,8 +105,8 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${{ secrets.SSH_KEY }}" ]; then
-            echo "SSH_KEY is required (OpenSSH private key)" >&2
+          if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then
+            echo "SSH_PASSWORD is required for password login" >&2
             exit 1
           fi
 
@@ -130,7 +130,7 @@ jobs:
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ env.SSH_PORT }}
           script: |
             set -e

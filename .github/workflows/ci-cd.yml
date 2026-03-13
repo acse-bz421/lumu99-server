@@ -87,26 +87,53 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main'
+    env:
+      SSH_HOST: lumu99.com
+      SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
     steps:
+      - name: Validate deploy secrets
+        run: |
+          set -e
+
+          if [ -z "${{ env.SSH_HOST }}" ]; then
+            echo "SSH_HOST is required (set in workflow env or GitHub secrets)" >&2
+            exit 1
+          fi
+
+          if [ -z "${{ secrets.SSH_USER }}" ]; then
+            echo "SSH_USER is required" >&2
+            exit 1
+          fi
+
+          if [ -z "${{ secrets.SSH_KEY }}" ]; then
+            echo "SSH_KEY is required (OpenSSH private key)" >&2
+            exit 1
+          fi
+
+          if [ -z "${{ secrets.GHCR_PAT }}" ]; then
+            echo "GHCR_PAT is required" >&2
+            exit 1
+          fi
+
+          if [ -z "${{ secrets.DOCKER_CONTAINER_NAME }}" ]; then
+            echo "DOCKER_CONTAINER_NAME is required" >&2
+            exit 1
+          fi
+
+          if [ -z "${{ secrets.DOCKER_RUN_ARGS }}" ]; then
+            echo "DOCKER_RUN_ARGS is required (e.g. -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod)" >&2
+            exit 1
+          fi
+
       - name: Deploy image on server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
+          host: ${{ env.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          port: ${{ env.SSH_PORT }}
           script: |
             set -e
-
-            if [ -z "${{ secrets.DOCKER_CONTAINER_NAME }}" ]; then
-              echo "DOCKER_CONTAINER_NAME is required" >&2
-              exit 1
-            fi
-
-            if [ -z "${{ secrets.DOCKER_RUN_ARGS }}" ]; then
-              echo "DOCKER_RUN_ARGS is required (e.g. -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod)" >&2
-              exit 1
-            fi
 
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
